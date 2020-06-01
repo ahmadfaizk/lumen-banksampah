@@ -80,6 +80,12 @@ $app->configure('dompdf');
 $app->routeMiddleware([
     'auth' => App\Http\Middleware\Authenticate::class,
 ]);
+$app->routeMiddleware([
+    'operator' => App\Http\Middleware\Operator::class,
+]);
+$app->routeMiddleware([
+    'customer' => App\Http\Middleware\Customer::class,
+]);
 
 /*
 |--------------------------------------------------------------------------

@@ -23,4 +23,19 @@ $router->group(['prefix' => 'api/v1/'], function() use ($router) {
     $router->group(['prefix' => 'user'], function() use($router) {
         $router->get('/', 'UserController@index');
     });
+
+    $router->group(['prefix' => 'customer'], function() use($router) {
+        $router->get('/', 'CustomerController@index');
+        $router->get('history', 'CustomerController@history');
+    });
+
+    $router->group(['prefix' => 'operator'], function() use($router) {
+        $router->get('/', 'OperatorController@index');
+        $router->get('customers', 'OperatorController@showCustomersNotConfirmed');
+        $router->post('deposit', 'OperatorController@deposit');
+        $router->post('withdraw', 'OperatorController@withdraw');
+    });
+
+    $router->post('deposit', 'OperatorController@deposit');
+    $router->post('withdraw', 'OperatorController@withdraw');
 });

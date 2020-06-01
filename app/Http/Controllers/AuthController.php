@@ -75,7 +75,6 @@ class AuthController extends Controller
         return response()->json([
             'error' => false,
             'message' => 'Register Success!',
-            'data' => $user,
             'data' => [
                 'token' => $apiToken,
                 'type' => 'Bearer'
