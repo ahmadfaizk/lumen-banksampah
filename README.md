@@ -1,4 +1,4 @@
-# API Tournesia
+# API Bank Sampah
 
 API for Bank Sampah Project
 
