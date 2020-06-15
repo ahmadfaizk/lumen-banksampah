@@ -22,20 +22,30 @@ $router->group(['prefix' => 'api/v1/'], function() use ($router) {
 
     $router->group(['prefix' => 'user'], function() use($router) {
         $router->get('/', 'UserController@index');
+        $router->post('update', 'UserController@update');
     });
 
     $router->group(['prefix' => 'customer'], function() use($router) {
         $router->get('/', 'CustomerController@index');
+        $router->get('all', 'OperatorController@showCustomers');
+        $router->get('search', 'OperatorController@searchCustomers');
+        $router->get('unconfirmed', 'OperatorController@showCustomersUnconfirmed');
         $router->get('history', 'CustomerController@history');
+    });
+
+    $router->group(['prefix' => 'complain'], function() use($router) {
+        $router->get('/', 'OperatorController@showComplains');
+        $router->post('add', 'CustomerController@complain');
     });
 
     $router->group(['prefix' => 'operator'], function() use($router) {
         $router->get('/', 'OperatorController@index');
-        $router->get('customers', 'OperatorController@showCustomersNotConfirmed');
+    });
+
+    $router->group(['prefix' => 'transaction'], function() use($router) {
+        $router->get('history', 'CustomerController@showHistory');
+        $router->get('{id}', 'OperatorController@showHistory');
         $router->post('deposit', 'OperatorController@deposit');
         $router->post('withdraw', 'OperatorController@withdraw');
     });
-
-    $router->post('deposit', 'OperatorController@deposit');
-    $router->post('withdraw', 'OperatorController@withdraw');
 });
