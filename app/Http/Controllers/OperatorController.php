@@ -39,7 +39,8 @@ class OperatorController extends Controller
             ->get();
         foreach ($data as $customer) {
             $customer->password = Crypt::decrypt($customer->password);
-            $customer->date = Carbon::parse($customer->created_at)->format('H:i, d M yy');
+            $customer->date = Carbon::parse($customer->updated_at)->format('H:i, d M yy');
+            $customer->forgot_password = $customer->created_at != $customer->updated_at;
         }
         return response()->json([
             'error' => false,
@@ -148,8 +149,12 @@ class OperatorController extends Controller
     public function showComplains() {
         $data = DB::table('complaints')
             ->join('users', 'users.id', '=', 'complaints.id_customer')
-            ->select('complaints.*', 'users.name as user_name')
+            ->select('complaints.id', 'complaints.text','complaints.created_at', 'users.name', 'users.phone_number', 'users.address')
             ->get();
+
+        foreach ($data as $d) {
+            $d->date = Carbon::parse($d->created_at)->format('H:i, d M yy');
+        }
 
         return response()->json([
             'error' => false,
@@ -162,7 +167,6 @@ class OperatorController extends Controller
         $customers = DB::table('users as u')
             ->join('customers as c', 'c.id_user', '=', 'u.id')
             ->select('u.id', 'u.name', 'u.phone_number', 'u.address', 'u.password', 'c.balance', 'c.withdraw')
-            ->whereNotNull('u.api_token')
             ->get();
         foreach ($customers as $customer) {
             $customer->password = Crypt::decrypt($customer->password);

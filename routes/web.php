@@ -23,6 +23,7 @@ $router->group(['prefix' => 'api/v1/'], function() use ($router) {
     $router->group(['prefix' => 'user'], function() use($router) {
         $router->get('/', 'UserController@index');
         $router->post('update', 'UserController@update');
+        $router->post('changepassword', 'UserController@changePassword');
     });
 
     $router->group(['prefix' => 'customer'], function() use($router) {
@@ -31,6 +32,7 @@ $router->group(['prefix' => 'api/v1/'], function() use ($router) {
         $router->get('search', 'OperatorController@searchCustomers');
         $router->get('unconfirmed', 'OperatorController@showCustomersUnconfirmed');
         $router->get('history', 'CustomerController@history');
+        $router->post('forgotpassword', 'AuthController@forgotPassswordCustomer');
     });
 
     $router->group(['prefix' => 'complain'], function() use($router) {
@@ -40,6 +42,7 @@ $router->group(['prefix' => 'api/v1/'], function() use ($router) {
 
     $router->group(['prefix' => 'operator'], function() use($router) {
         $router->get('/', 'OperatorController@index');
+        $router->post('forgotpassword', 'AuthController@forgotPasswordOperator');
     });
 
     $router->group(['prefix' => 'transaction'], function() use($router) {

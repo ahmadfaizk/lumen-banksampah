@@ -134,4 +134,66 @@ class AuthController extends Controller
             ]);
         }
     }
+
+    public function forgotPassswordCustomer(Request $request) {
+
+        $user = User::where([
+            'phone_number' => $request->phone_number,
+            'role' => 'customer'
+        ])->first();
+        if ($user == null) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Forgot Password Failed!',
+                'errors_detail' => [
+                    'Phone Number Not Found!'
+                ],
+                'data' => null
+            ]);
+        }
+        $user->api_token = null;
+        $user->save();
+        return response()->json([
+            'error' => false,
+            'message' => 'Forgot Password Succes',
+            'data' => null
+        ]);
+    }
+
+    public function forgotPasswordOperator(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'phone_number' => 'required|string|max:15|min:11',
+            'password' => 'required|string|min:6'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Forgot Password Failed!',
+                'errors_detail' => $validator->errors()->all(),
+                'data' => null
+            ]);
+        }
+        $user = User::where([
+            'phone_number' => $request->phone_number,
+            'role' => 'operator'
+        ])->first();
+        if ($user == null) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Forgot Password Failed!',
+                'errors_detail' => [
+                    'Phone Number Not Found!'
+                ],
+                'data' => null
+            ]);
+        }
+        $user->password = Crypt::encrypt($request->password);
+        $user->save();
+        return response()->json([
+            'error' => false,
+            'message' => 'Forgot Password Succes',
+            'data' => $user
+        ]);
+    }
 }
