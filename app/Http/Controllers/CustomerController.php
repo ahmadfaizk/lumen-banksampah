@@ -38,7 +38,7 @@ class CustomerController extends Controller
     }
 
     public function showHistory() {
-        $data = Transaction::where('id_user', Auth()->user()->id)->get();
+        $data = Transaction::where('id_user', Auth()->user()->id)->latest()->get();
         foreach ($data as $d) {
             $d->date = Carbon::parse($d->created_at)->format('H:i, d M yy');
         }

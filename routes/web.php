@@ -15,6 +15,10 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
+$router->get('/key', function() {
+    return \Illuminate\Support\Str::random(32);
+});
+
 $router->group(['prefix' => 'api/v1/'], function() use ($router) {
     $router->post('register/customer', 'AuthController@registerCustomer');
     $router->post('register/operator', 'AuthController@registerOperator');
@@ -31,7 +35,6 @@ $router->group(['prefix' => 'api/v1/'], function() use ($router) {
         $router->get('all', 'OperatorController@showCustomers');
         $router->get('search', 'OperatorController@searchCustomers');
         $router->get('unconfirmed', 'OperatorController@showCustomersUnconfirmed');
-        $router->get('history', 'CustomerController@history');
         $router->post('forgotpassword', 'AuthController@forgotPassswordCustomer');
     });
 
@@ -46,9 +49,16 @@ $router->group(['prefix' => 'api/v1/'], function() use ($router) {
     });
 
     $router->group(['prefix' => 'transaction'], function() use($router) {
-        $router->get('history', 'CustomerController@showHistory');
-        $router->get('{id}', 'OperatorController@showHistory');
         $router->post('deposit', 'OperatorController@deposit');
         $router->post('withdraw', 'OperatorController@withdraw');
+        $router->group(['prefix' => 'history'], function() use($router) {
+            $router->get('/', 'CustomerController@showHistory');
+            $router->get('/{id}', 'OperatorController@showHistory');
+        });
+        $router->group(['prefix' => '{id}'], function() use($router) {
+            $router->get('/', 'OperatorController@showTransaction');
+            $router->post('edit', 'OperatorController@editTransaction');
+            $router->get('delete', 'OperatorController@deleteTransaction');
+        });
     });
 });

@@ -119,7 +119,7 @@ class OperatorController extends Controller
         if ($request->amount > $customer->balance) {
             return response()->json([
                 'error' => true,
-                'message' => 'Amount is higher than customer balance',
+                'message' => 'Saldo Customer Tidak Mencukupi',
                 'data' => null
             ]);
         }
@@ -150,6 +150,7 @@ class OperatorController extends Controller
         $data = DB::table('complaints')
             ->join('users', 'users.id', '=', 'complaints.id_customer')
             ->select('complaints.id', 'complaints.text','complaints.created_at', 'users.name', 'users.phone_number', 'users.address')
+            ->latest()
             ->get();
 
         foreach ($data as $d) {
@@ -202,7 +203,7 @@ class OperatorController extends Controller
             ]);
         }
 
-        $data = Transaction::where('id_user', $id)->get();
+        $data = Transaction::where('id_user', $id)->latest()->get();
         foreach ($data as $d) {
             $d->date = Carbon::parse($d->created_at)->format('H:i, d M yy');
         }
@@ -210,6 +211,124 @@ class OperatorController extends Controller
             'error' => false,
             'message' => 'Succes get History Transactions',
             'data' => $data
+        ]);
+    }
+
+    public function showTransaction($id) {
+        $transaction = Transaction::find($id);
+        if ($transaction == null) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Transaction not found',
+                'data' => null
+            ]);
+        }
+        return response()->json([
+            'error' => false,
+            'message' => 'Succes Get Transactions',
+            'data' => $transaction
+        ]);
+    }
+
+    public function deleteTransaction($id) {
+        $transaction = Transaction::find($id);
+        if ($transaction == null) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Transaction not found',
+                'data' => null
+            ]);
+        }
+
+        $customer = DB::table('customers')->where('id_user', $transaction->id_user)->first();
+
+        if ($transaction->type == 'deposit') {
+            if ($customer->balance < $transaction->amount) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Saldo Customer Tidak Mencukupi',
+                    'data' => null
+                ]);
+            }
+            $newBalance = $customer->balance - $transaction->amount;
+            DB::table('customers')
+                ->where('id_user', $transaction->id_user)
+                ->update(['balance' => $newBalance]);
+        } elseif ($transaction->type == 'withdraw') {
+            $newBalance = $customer->balance + $transaction->amount;
+            $newWithdraw = $customer->withdraw - $transaction->amount;
+            DB::table('customers')
+                ->where('id_user', $transaction->id_user)
+                ->update(['balance' => $newBalance, 'withdraw' => $newWithdraw]);
+        } else {
+            abort(404);
+        }
+
+        $transaction->delete();
+        return response()->json([
+            'error' => false,
+            'message' => 'Succes Delete Transactions',
+            'data' => $transaction
+        ]);
+    }
+
+    public function editTransaction($id, Request $request) {
+        $validator = Validator::make($request->all(), [
+            'amount' => 'required|integer'
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Edit Transaction Failed!',
+                'errors_detail' => $validator->errors()->all(),
+                'data' => null
+            ]);
+        }
+        $transaction = Transaction::find($id);
+        if ($transaction == null) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Transaction not found',
+                'data' => null
+            ]);
+        }
+
+        $customer = DB::table('customers')->where('id_user', $transaction->id_user)->first();
+
+        if ($transaction->type == 'deposit') {
+            if ($customer->balance < $transaction->amount - $request->amount) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Saldo Customer Tidak Mencukupi',
+                    'data' => null
+                ]);
+            }
+            $newBalance = $customer->balance - $transaction->amount + $request->amount;
+            DB::table('customers')
+                ->where('id_user', $transaction->id_user)
+                ->update(['balance' => $newBalance]);
+        } elseif ($transaction->type == 'withdraw') {
+            if (($customer->balance + $transaction->amount) < $request->amount) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Saldo Customer Tidak Mencukupi',
+                    'data' => null
+                ]);
+            }
+            $newBalance = $customer->balance + $transaction->amount - $request->amount;
+            $newWithdraw = $customer->withdraw - $transaction->amount + $request->amount;
+            DB::table('customers')
+                ->where('id_user', $transaction->id_user)
+                ->update(['balance' => $newBalance, 'withdraw' => $newWithdraw]);
+        } else {
+            abort(404);
+        }
+        $transaction->amount = $request->amount;
+        $transaction->save();
+        return response()->json([
+            'error' => false,
+            'message' => 'Succes Edit Transactions',
+            'data' => $transaction
         ]);
     }
 }
