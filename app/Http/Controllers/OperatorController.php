@@ -36,6 +36,7 @@ class OperatorController extends Controller
         $data = DB::table('users')
             ->where('role', 'customer')
             ->whereNull('api_token')
+            ->latest()
             ->get();
         foreach ($data as $customer) {
             $customer->password = Crypt::decrypt($customer->password);
@@ -168,6 +169,7 @@ class OperatorController extends Controller
         $customers = DB::table('users as u')
             ->join('customers as c', 'c.id_user', '=', 'u.id')
             ->select('u.id', 'u.name', 'u.phone_number', 'u.address', 'u.password', 'c.balance', 'c.withdraw')
+            ->orderBy('u.name')
             ->get();
         foreach ($customers as $customer) {
             $customer->password = Crypt::decrypt($customer->password);
@@ -181,8 +183,8 @@ class OperatorController extends Controller
 
     public function searchCustomers(Request $request) {
         $user = DB::table('users as u')
-        ->join('customers as c', 'c.id_user', '=', 'u.id')
-        ->select('u.id', 'u.name', 'u.phone_number', 'u.address', 'c.balance', 'c.withdraw')
+            ->join('customers as c', 'c.id_user', '=', 'u.id')
+            ->select('u.id', 'u.name', 'u.phone_number', 'u.address', 'c.balance', 'c.withdraw')
             ->where('u.name', $request->name)
             ->get();
         return response()->json([
@@ -329,6 +331,29 @@ class OperatorController extends Controller
             'error' => false,
             'message' => 'Succes Edit Transactions',
             'data' => $transaction
+        ]);
+    }
+
+    public function deleteCustomer($id) {
+        $customer = User::where([
+            'id' => $id,
+            'role' => 'customer'
+        ])->first();
+
+        if ($customer == null) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Customer Not Found!',
+                'data' => null
+            ]);
+        }
+
+        $customer->delete();
+
+        return response()->json([
+            'error' => false,
+            'message' => 'Success Delete Customer!',
+            'data' => $customer
         ]);
     }
 }

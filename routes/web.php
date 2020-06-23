@@ -34,8 +34,10 @@ $router->group(['prefix' => 'api/v1/'], function() use ($router) {
         $router->get('/', 'CustomerController@index');
         $router->get('all', 'OperatorController@showCustomers');
         $router->get('search', 'OperatorController@searchCustomers');
+        $router->get('{id}/delete', 'OperatorController@deleteCustomer');
         $router->get('unconfirmed', 'OperatorController@showCustomersUnconfirmed');
         $router->post('forgotpassword', 'AuthController@forgotPassswordCustomer');
+        $router->post('withdraw', 'CustomerController@withdraw');
     });
 
     $router->group(['prefix' => 'complain'], function() use($router) {

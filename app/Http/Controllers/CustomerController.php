@@ -72,4 +72,49 @@ class CustomerController extends Controller
             'data' => $data
         ]);
     }
+
+    public function withdraw(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'amount' => 'required|integer'
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Penarikan Saldo Gagal!',
+                'errors_detail' => $validator->errors()->all(),
+                'data' => null
+            ]);
+        }
+        
+        $amount = $request->amount;
+        $userId = Auth()->user()->id;
+        $customer = DB::table('customers')->where('id_user', $userId)->first();
+        if ($amount > $customer->balance) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Saldo Anda Tidak Mencukupi',
+                'data' => null
+            ]);
+        }
+
+        $transaction = Transaction::create([
+            'id_user' => $userId,
+            'amount' => $request->amount,
+            'type' => 'withdraw'
+        ]);
+        $newBalance = $customer->balance - $amount;
+        $newWithdraw = $customer->withdraw + $amount;
+        DB::table('customers')
+            ->where('id_user', $userId)
+            ->update([
+                'balance' => $newBalance,
+                'withdraw' => $newWithdraw
+            ]);
+        
+        return response()->json([
+            'error' => false,
+            'message' => 'Penarikan Saldo Success!',
+            'data' => $transaction
+        ]);
+    }
 }
