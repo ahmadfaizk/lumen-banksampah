@@ -168,12 +168,9 @@ class OperatorController extends Controller
     public function showCustomers() {
         $customers = DB::table('users as u')
             ->join('customers as c', 'c.id_user', '=', 'u.id')
-            ->select('u.id', 'u.name', 'u.phone_number', 'u.address', 'u.password', 'c.balance', 'c.withdraw')
+            ->select('u.id', 'u.name', 'u.phone_number', 'u.address', 'c.balance', 'c.withdraw', 'c.id_card')
             ->orderBy('u.name')
             ->get();
-        foreach ($customers as $customer) {
-            $customer->password = Crypt::decrypt($customer->password);
-        }
         return response()->json([
             'error' => false,
             'message' => 'Succes get Customers',
@@ -354,6 +351,83 @@ class OperatorController extends Controller
             'error' => false,
             'message' => 'Success Delete Customer!',
             'data' => $customer
+        ]);
+    }
+
+    public function registerCard(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'id_user' => 'required|integer',
+            'id_card' => 'required|unique:customers|string|max:8'
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Register card Failed!',
+                'errors_detail' => $validator->errors()->all(),
+                'data' => null
+            ]);
+        }
+        $customer = DB::table('customers')->where('id_user', $request->id_user)->first();
+        if ($customer == null) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Customer Not Found!',
+                'data' => null
+            ]);
+        }
+        DB::table('customers')
+            ->where('id_user', $request->id_user)
+            ->update(['id_card' => $request->id_card]);
+        
+        $customer = DB::table('customers')->where('id_user', $request->id_user)->first();
+        
+        return response()->json([
+            'error' => false,
+            'message' => 'Success Register Card',
+            'data' => $customer
+        ]);
+    }
+
+    public function depositCard(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'id_card' => 'required|string',
+            'amount' => 'required|integer'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Deposit Failed!',
+                'errors_detail' => $validator->errors()->all(),
+                'data' => null
+            ]);
+        }
+
+        $customer = DB::table('customers')->where('id_card', $request->id_card)->first();
+        if($customer == null) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Customer Not Found!',
+                'data' => null
+            ]);
+        }
+
+        $transaction = Transaction::create([
+            'id_user' => $customer->id_user,
+            'amount' => $request->amount,
+            'type' => 'deposit'
+        ]);
+
+        $newBalance = $customer->balance + $request->amount;
+
+        DB::table('customers')
+            ->where('id_card', $request->id_card)
+            ->update(['balance' => $newBalance]);
+        
+        return response()->json([
+            'error' => false,
+            'message' => 'Deposit Success!',
+            'data' => $transaction
         ]);
     }
 }

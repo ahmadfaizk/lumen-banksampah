@@ -20,8 +20,11 @@ $router->get('/key', function() {
 });
 
 $router->group(['prefix' => 'api/v1/'], function() use ($router) {
-    $router->post('register/customer', 'AuthController@registerCustomer');
-    $router->post('register/operator', 'AuthController@registerOperator');
+    $router->group(['prefix' => 'register'], function() use ($router) {
+        $router->post('customer', 'AuthController@registerCustomer');
+        $router->post('operator', 'AuthController@registerOperator');
+        $router->post('card', 'OperatorController@registerCard');
+    });
     $router->post('login', 'AuthController@login');
 
     $router->group(['prefix' => 'user'], function() use($router) {
@@ -53,6 +56,7 @@ $router->group(['prefix' => 'api/v1/'], function() use ($router) {
     $router->group(['prefix' => 'transaction'], function() use($router) {
         $router->post('deposit', 'OperatorController@deposit');
         $router->post('withdraw', 'OperatorController@withdraw');
+        $router->post('deposit/card', 'OperatorController@depositCard');
         $router->group(['prefix' => 'history'], function() use($router) {
             $router->get('/', 'CustomerController@showHistory');
             $router->get('/{id}', 'OperatorController@showHistory');

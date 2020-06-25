@@ -16,6 +16,7 @@ class CreateCustomersTable extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->unsignedBigInteger('id_user');
             $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
+            $table->string('id_card')->unique()->nullable();
             $table->bigInteger('balance')->default(0);
             $table->bigInteger('withdraw')->default(0);
         });
